@@ -62,10 +62,11 @@
         </dependency>
 
         <!-- JUnit 4 (Required for cucumber-junit) -->
+        <!-- Source: https://mvnrepository.com/artifact/junit/junit -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
+            <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
 
