@@ -9,58 +9,35 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
-import org.kagisho.models.Location;
-import org.kagisho.models.Place;
-import org.kagisho.utilities.JsonReaderUtil;
+import org.kagisho.data.TestDataBuilder;
+import org.kagisho.utilities.SpecUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.Assert.assertEquals;
 
 
-public class StepDefinitions {
+public class StepDefinitions extends SpecUtils {
 
     RequestSpecification requestSpecification; // class-level
     ResponseSpecification responseSpecification; // optional reusable
+    TestDataBuilder data = new TestDataBuilder();
     Response response; // store response for later assertions
 
     @Given("Add Place Payload")
     public void add_place_payload() throws IOException {
-        // Read JSON payload into Place object
-        Place place = JsonReaderUtil.readJson("data/AddPlace.json");
 
-        // Set fields dynamically
-        place.setAccuracy(50);
-        place.setPhone_number("060 1234567");
-        place.setWebsite("https://rahulshettyacademy.com");
-        place.setAddress("161 Maude St, Sandown, Sandton, 2196");
-
-        List<String> myList = new ArrayList<>();
-        myList.add("shoe park");
-        myList.add("shop");
-        place.setTypes(myList);
-
-        Location location = new Location();
-        location.setLat(232.11);
-        location.setLng(12.332);
-        place.setLocation(location);
-
-        System.out.println(place);
 
         // Assign to class-level variable (no shadowing!)
-        requestSpecification = new RequestSpecBuilder()
-                .setBaseUri("https://rahulshettyacademy.com")
-                .setContentType(ContentType.JSON)
-                .setBody(place) // attach the payload here
-                .build();
 
         responseSpecification = new ResponseSpecBuilder()
                 .expectStatusCode(200)
                 .expectContentType(ContentType.JSON)
                 .build();
+
+        requestSpecification = given().spec(requestSpecification())
+                .body(data.addPlacePayLoad());
     }
 
     @When("user calls {string} with post http request")
