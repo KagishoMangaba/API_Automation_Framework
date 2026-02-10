@@ -10,7 +10,7 @@ import java.util.List;
 
 public class TestDataBuilder {
 
-    public Place addPlacePayLoad() throws IOException {
+    public Place addPlacePayLoad(String name , String language , String address) throws IOException {
 
         // Read JSON payload into Place object
         Place place = JsonReaderUtil.readJson("data/AddPlace.json");
@@ -19,7 +19,9 @@ public class TestDataBuilder {
         place.setAccuracy(50);
         place.setPhone_number("060 1234567");
         place.setWebsite("https://rahulshettyacademy.com");
-        place.setAddress("161 Maude St, Sandown, Sandton, 2196");
+        place.setAddress(address);
+        place.setName(name);
+        place.setLanguage(language);
 
         List<String> myList = new ArrayList<>();
         myList.add("shoe park");
