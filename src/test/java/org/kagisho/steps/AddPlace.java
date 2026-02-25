@@ -5,72 +5,73 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.http.ContentType;
-import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
+import org.kagisho.base.TestContext;
 import org.kagisho.data.TestDataBuilder;
 import org.kagisho.resources.APIResources;
 import org.kagisho.utilities.SpecBuilderUtil;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.Assert.assertEquals;
 import static org.kagisho.utilities.JsonPathUtil.getJsonPath;
 
+public class AddPlace {
 
-public class AddPlace extends SpecBuilderUtil {
+    private TestContext context;               // PicoContainer injects this
+    private TestDataBuilder data = new TestDataBuilder();
+    private RequestSpecification reqSpec;      // renamed for clarity
 
-    RequestSpecification requestSpecification; // class-level
-    ResponseSpecification responseSpecification; // optional reusable
-    TestDataBuilder data = new TestDataBuilder();
-    Response response; // store response for later assertions
-    String placeId;
-    JsonPath js;
+    // Constructor injection
+    public AddPlace(TestContext context) {
+        this.context = context;
+    }
 
     @Given("Add Place Payload with {string} {string} {string}")
     public void add_place_payload_with(String name, String language, String address) throws IOException {
 
-
-        // Assign to class-level variable (no shadowing!)
-        requestSpecification = given().spec(requestSpecification())
+        reqSpec = given()
+                .spec(SpecBuilderUtil.requestSpecification())
                 .body(data.addPlacePayLoad(name, language, address));
-
-
-        responseSpecification = new ResponseSpecBuilder()
-                .expectStatusCode(200)
-                .expectContentType(ContentType.JSON)
-                .build();
 
     }
 
-    @When("user calls {string} with post http request")
-    public void user_calls_with_post_http_request(String string) {
+    @When("user calls {string} with {string} http request")
+    public void user_calls_with_http_request(String resource, String httpMethod) {
 
-        // Use class-level requestSpecification
+        APIResources resourceAPI = APIResources.valueOf(resource);
+        Response response;
+
+        // dynamic method
         response = given()
-                .spec(requestSpecification)
+                .spec(reqSpec)
                 .when()
-                .post(APIResources.ADD_PLACE.getResource())
-                .then().extract().response(); // e.g., "maps/api/place/add/json"
+                .request(httpMethod.toUpperCase(), resourceAPI.getResource())
+                .then()
+                .extract()
+                .response();
 
+        // save response in context
+        context.setResponse(response);
 
-        placeId = response.jsonPath().getString("place_id");
-
+        // save placeId only if this is AddPlace API
+        if (resource.equalsIgnoreCase("ADD_PLACE")) {
+            String placeId = response.jsonPath().getString("place_id");
+            context.setPlaceId(placeId);
+        }
     }
 
     @Then("the API call is success with status code {int}")
-    public void the_api_call_is_success_with_status_code(Integer int1) {
-        assertEquals(200, response.getStatusCode());
-
+    public void the_api_call_is_success_with_status_code(Integer expectedStatus) {
+        Response response = context.getResponse();
+        assertEquals(expectedStatus.intValue(), response.getStatusCode());
     }
 
     @Then("{string} in response body is {string}")
-    public void in_response_body_is(String keyValue, String expectedValue) {
-        assertEquals(getJsonPath(response , keyValue) , expectedValue);
+    public void in_response_body_is(String key, String expectedValue) {
+        Response response = context.getResponse();
+        assertEquals(getJsonPath(response, key), expectedValue);
     }
-
-
 }
